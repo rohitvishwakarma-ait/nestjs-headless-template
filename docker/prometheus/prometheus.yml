@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 5s       # how often Prometheus pulls metrics
+  evaluation_interval: 5s   # how often rules are evaluated
+
+scrape_configs:
+  - job_name: nestjs_api
+    static_configs:
+      - targets:
+          - api:3000          # container name resolves inside Docker network
+    metrics_path: /v1/metrics # matches your global prefix + MetricsController
