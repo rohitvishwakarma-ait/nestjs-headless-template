@@ -1,43 +1,37 @@
 import { Injectable } from '@nestjs/common';
-import { IProduct } from './interfaces/product.interface';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ProductEntity } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ProductStatus } from './enums/product-status.enum';
 
-// Data access layer — replace with actual ORM (TypeORM / Prisma / Drizzle)
+// Data access layer — all DB calls live here, never in service or controller
 @Injectable()
 export class ProductRepository {
-  private products: IProduct[] = [];
+  constructor(
+    @InjectRepository(ProductEntity)
+    private readonly repo: Repository<ProductEntity>,
+  ) {}
 
-  async findAll(): Promise<IProduct[]> {
-    return this.products;
+  findAll(): Promise<ProductEntity[]> {
+    return this.repo.find();
   }
 
-  async findById(id: string): Promise<IProduct | null> {
-    return this.products.find((p) => p.id === id) ?? null;
+  findById(id: string): Promise<ProductEntity | null> {
+    return this.repo.findOneBy({ id });
   }
 
-  async create(dto: CreateProductDto): Promise<IProduct> {
-    const product: IProduct = {
-      id: crypto.randomUUID(),
-      name: dto.name,
-      description: dto.description,
-      price: dto.price,
-      status: dto.status ?? ProductStatus.DRAFT,
-      createdAt: new Date(),
-    };
-    this.products.push(product);
-    return product;
+  create(dto: CreateProductDto): Promise<ProductEntity> {
+    const product = this.repo.create(dto);
+    return this.repo.save(product);
   }
 
-  async update(id: string, dto: UpdateProductDto): Promise<IProduct | null> {
-    const index = this.products.findIndex((p) => p.id === id);
-    if (index === -1) return null;
-    this.products[index] = { ...this.products[index], ...dto };
-    return this.products[index];
+  async update(id: string, dto: UpdateProductDto): Promise<ProductEntity | null> {
+    await this.repo.update(id, dto);
+    return this.findById(id);
   }
 
   async delete(id: string): Promise<void> {
-    this.products = this.products.filter((p) => p.id !== id);
+    await this.repo.delete(id);
   }
 }

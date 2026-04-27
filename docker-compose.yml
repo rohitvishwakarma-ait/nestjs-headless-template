@@ -15,7 +15,31 @@ services:
     networks:
       - monitoring
     depends_on:
-      - prometheus
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: nestjs
+      POSTGRES_PASSWORD: nestjs_pass
+      POSTGRES_DB: nestjs_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - monitoring
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nestjs -d nestjs_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # ── Prometheus ──────────────────────────────────────────────────────────────
   prometheus:
@@ -58,5 +82,6 @@ networks:
     driver: bridge
 
 volumes:
+  postgres_data:
   prometheus_data:
   grafana_data:
