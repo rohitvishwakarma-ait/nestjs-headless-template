@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-// Handbook: centralized data layer — never access process.env directly, use ConfigService
+// Handbook: centralized data layer — config comes from apps/api/src/config/database.config.ts
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
@@ -10,14 +10,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
-        host: config.get<string>('DB_HOST'),
-        port: config.get<number>('DB_PORT'),
-        username: config.get<string>('DB_USERNAME'),
-        password: config.get<string>('DB_PASSWORD'),
-        database: config.get<string>('DB_NAME'),
-        // Auto-load all entities registered via TypeOrmModule.forFeature()
+        host: config.get<string>('database.host'),
+        port: config.get<number>('database.port'),
+        username: config.get<string>('database.username'),
+        password: config.get<string>('database.password'),
+        database: config.get<string>('database.name'),
         autoLoadEntities: true,
-        // synchronize: true only for development — use migrations in production
         synchronize: config.get<string>('NODE_ENV') !== 'production',
         logging: config.get<string>('NODE_ENV') === 'development',
       }),
