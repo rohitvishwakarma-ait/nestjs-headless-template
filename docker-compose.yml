@@ -12,6 +12,8 @@ services:
       - '3000:3000'
     env_file:
       - .env
+    volumes:
+      - ./logs:/app/logs        # 500 errors persisted to host logs/error.log
     networks:
       - monitoring
     depends_on:
